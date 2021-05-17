@@ -49,6 +49,14 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void _handleAtachmentPressed() {
+    // final textMessage = types.TextMessage(
+    //   authorId: '06c33e8b-e835-4736-80f4-63f44b666661',
+    //   id: const Uuid().v4(),
+    //   text: 'LOL',
+    //   timestamp: (DateTime.now().millisecondsSinceEpoch / 1000).floor(),
+    // );
+
+    // _addMessage(textMessage);
     showModalBottomSheet<void>(
       context: context,
       builder: (BuildContext context) {
@@ -142,6 +150,13 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
+  void _handleMessageLongPress(types.Message message) {
+    final index = _messages.indexWhere((element) => element.id == message.id);
+    setState(() {
+      _messages = [..._messages]..removeAt(index);
+    });
+  }
+
   void _handleMessageTap(types.Message message) async {
     if (message is types.FileMessage) {
       await OpenFile.open(message.uri);
@@ -153,11 +168,12 @@ class _ChatPageState extends State<ChatPage> {
     types.PreviewData previewData,
   ) {
     final index = _messages.indexWhere((element) => element.id == message.id);
-    final currentMessage = _messages[index] as types.TextMessage;
-    final updatedMessage = currentMessage.copyWith(previewData: previewData);
+    final updatedMessage = _messages[index].copyWith(previewData: previewData);
 
-    setState(() {
-      _messages[index] = updatedMessage;
+    WidgetsBinding.instance?.addPostFrameCallback((_) {
+      setState(() {
+        _messages[index] = updatedMessage;
+      });
     });
   }
 
@@ -189,6 +205,7 @@ class _ChatPageState extends State<ChatPage> {
       body: Chat(
         messages: _messages,
         onAttachmentPressed: _handleAtachmentPressed,
+        onMessageLongPress: _handleMessageLongPress,
         onMessageTap: _handleMessageTap,
         onPreviewDataFetched: _handlePreviewDataFetched,
         onSendPressed: _handleSendPressed,
